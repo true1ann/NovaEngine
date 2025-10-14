@@ -4,7 +4,7 @@ const eapp = express()
 require('express-ws')(eapp)
 const { v4: uuidv4 } = require('uuid')
 const path = require('path')
-const { easings, transition } = require('./lib/transition')
+const { transition } = require('./lib/transition')
 
 let nefs = {
 	windows: {},

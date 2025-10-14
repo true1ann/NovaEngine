@@ -1,0 +1,9 @@
+@font-face {
+	font-family: "Recursive";
+	src: url("fonts/recursive.woff2") format("woff2");
+	font-display: swap;
+}
+
+* {
+    font-family: "Recursive", "Roboto", "Inter", sans-serif;
+}

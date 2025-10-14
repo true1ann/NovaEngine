@@ -4,13 +4,17 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>NeoFunkin (main)</title>
+	<title>NovaEngine (Initializing)</title>
 	<meta name="color-scheme" content="dark">
+	<link href="/assets/style.css" rel="stylesheet">
 </head>
-ex
 <body>
-	<!-- fun fact this originates from one of the NeoFunkin for that time demo! -->
-	<button onclick="startHell();">Press me :3</button>
+	<div id="loadingdiv" style="display: flex; position: fixed; top: 0; left: 0; justify-content: center; align-items: center; margin: 0; padding: 0; width: 100vw; height: 100vh; flex-direction: column; background-color: black;">
+		<h1 style="padding: 0; margin: 0;">NovaEngine is loading...</h1>
+		<span>(This wont take a long time)</span>
+		<img src="/assets/loading.svg" style="margin: 30px; height: 64px; width: auto; color: white;">
+		<span style="color: red;">NovaEngine is in a raw state.<br>Currently the loading is infinite.</span>
+	</div>
 </body>
 
 </html>

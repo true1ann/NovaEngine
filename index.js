@@ -101,8 +101,8 @@ const events = {
 			if (args?.animate) {
 				const fps = ilib.screen.requestMaxFPS()
 				const [cx, cy] = win.win.getPosition()
-				const tx = pos.x
-				const ty = pos.y
+				const tx = args?.relative ? cx + pos.x : pos.x
+				const ty = args?.relative ? cy + pos.y : pos.y
 
 				let ex = cx
 				let ey = cy
@@ -137,8 +137,8 @@ const events = {
 			if (args?.animate) {
 				const fps = ilib.screen.requestMaxFPS()
 				const [cw, ch] = win.win.getSize()
-				const tw = size.x
-				const th = size.y
+				const tw = args?.relative ? cw + size.w : size.w
+				const th = args?.relative ? ch + size.h : size.h
 
 				let ew = cw
 				let eh = ch
@@ -158,7 +158,7 @@ const events = {
 				})
 
 			} else {
-				win.win.setSize(size.x, size.y)
+				win.win.setSize(size.w, size.h)
 			}
 		},
 		nullify: (wid) => {
@@ -245,9 +245,6 @@ app.whenReady().then(() => {
 	const mainwin = events.window.new(undefined, undefined, { href: '/'})
 	console.log('[Nova] Created main window')
 
-	// delete this omg
-
-	const subwin = events.window.new(undefined, undefined, { frame: false })
-	console.log(`["${subwin}", "${mainwin}"]`)
-
+	events.window.resize(mainwin, { w: 600, h: 400 }, { animate: true, ease: 'smoothStep', duration: 500 })
+	events.window.move(mainwin, { x: -100, y: 0 }, { animate: true, ease: 'smoothStep', duration: 500, relative: true })
 })

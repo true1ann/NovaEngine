@@ -5,6 +5,7 @@ require('express-ws')(eapp)
 const { v4: uuidv4 } = require('uuid')
 const path = require('path')
 const { transition } = require('./pub/lib/transition')
+const fs = require('fs')
 
 let nefs = {
 	windows: {},
@@ -37,6 +38,16 @@ const ilib = {
 					})
 				}
 			}
+
+			app.get('/api/plugins/list', (req, res) => {
+				fs.readdir(path.join(__dirname, 'pub', 'plugins'), (err, files) => {
+					if (err) {
+						return res.status(500).json({ error: 'Failed to read plugins directory' })
+					}
+					const plugins = files.filter(file => fs.statSync(path.join(__dirname, 'pub', 'plugins', file)).isFile()) 
+					res.json(plugins)
+				})
+			})
 		},
 		store: {
 			port: 62407
@@ -46,12 +57,8 @@ const ilib = {
 
 const events = {
 	screen: {
-		getBounds: () => {
-			return ilib.getBounds()
-		},
-		getMaxFPS: () => {
-			return ilib.requestMaxFPS()
-		}
+		getBounds: () => ilib.screen.getBounds(),
+		getMaxFPS: () => ilib.screen.requestMaxFPS()
 	},
 	window: {
 		new: (size, pos, args) => {
@@ -262,6 +269,7 @@ const events = {
 				return false
 			}
 
+			// Unused right now
 
 		}
 	}

@@ -1,11 +1,12 @@
-export const plugin = {
-    meta: {
-        name: 'Nova_Player',
-        authors: [ '@true1ann' ],
-        desc: 'The official Nova audio player. Uses "Audio" from JavaScript'
-    },
-    hooks: {
-        nova: {
+return (function() {
+    return {
+        meta: {
+            name: 'Nova_Player',
+            authors: [ '@true1ann' ],
+            desc: 'The official Nova audio player. Uses "Audio" from JavaScript',
+            priority: 500
+        },
+        hooks: {
             playerRequest: (src) => {
                 if (src.endsWith('.mp3') || src.endsWith('.ogg') || src.endsWith('.wav')) {
                     try {
@@ -21,4 +22,4 @@ export const plugin = {
             } 
         }
     }
-}
+})()

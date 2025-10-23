@@ -239,7 +239,7 @@ const events = {
 				win1.lock = null
 			}
 			// You can call me a freak for this one
-			console.log(`[NovaWM] ${towid} leashed ${wid}`)
+			console.log(`[NovaWM] ${wid} got leashed by ${towid}`)
 		},
 		unlock: (wid) => {
 			const win = nefs.windows[wid]

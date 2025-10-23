@@ -4,7 +4,7 @@ const eapp = express()
 require('express-ws')(eapp)
 const { v4: uuidv4 } = require('uuid')
 const path = require('path')
-const { transition } = require('./lib/transition')
+const { transition } = require('./pub/lib/transition')
 
 let nefs = {
 	windows: {},
@@ -16,9 +16,7 @@ const ilib = {
 		getBounds: () => {
 			return electronScreenDontFuckingUseThis.getPrimaryDisplay().bounds
 		},
-		getPercent: (max, p) => {
-			return Math.round(max * p / 100)
-		},
+		// Due to extreme stupidity getPercent was here.
 		requestMaxFPS: () => {
 			return Math.round(electronScreenDontFuckingUseThis.getPrimaryDisplay().displayFrequency) // чтобы не выебывался
 		}
@@ -47,6 +45,14 @@ const ilib = {
 }
 
 const events = {
+	screen: {
+		getBounds: () => {
+			return ilib.getBounds()
+		},
+		getMaxFPS: () => {
+			return ilib.requestMaxFPS()
+		}
+	},
 	window: {
 		new: (size, pos, args) => {
 			let wid = uuidv4()
@@ -72,6 +78,8 @@ const events = {
 					nodeIntegration: true,
 					contextIsolation: false,
 					enableRemoteModule: true,
+					preload: path.join(__dirname, 'pub', 'lib', 'preload.js'),
+					additionalArguments: [`--nova-wid=${wid}`]
 				},
 			})
 
@@ -97,15 +105,25 @@ const events = {
 				console.warn(`[NovaWM] No window with WID of ${wid} was found :<`)
 				return false
 			}
+			
+			const fps = ilib.screen.requestMaxFPS()
+			const [cx, cy] = win.win.getPosition()
+			const [cw, ch] = win.win.getSize()
+
+			let ox = 0, oy = 0
+			if (args?.origin) {
+				if (args.origin.x == 'center') ox = Math.round(cw / 2)
+				if (args.origin.x == 'left') ox = cw
+
+				if (args.origin.y == 'center') oy = Math.round(ch / 2) 
+				if (args.origin.y == 'top') oy = ch
+			}
+
+			const tx = args?.relative ? cx + pos.x - oy : pos.x - ox
+			const ty = args?.relative ? cy + pos.y - oy: pos.y - oy
 
 			if (args?.animate) {
-				const fps = ilib.screen.requestMaxFPS()
-				const [cx, cy] = win.win.getPosition()
-				const tx = args?.relative ? cx + pos.x : pos.x
-				const ty = args?.relative ? cy + pos.y : pos.y
-
-				let ex = cx
-				let ey = cy
+				let ex = cx, ey = cy
 
 				transition(cx, tx, args?.duration, fps, args?.ease, {
 					onTick: ({ c }) => {
@@ -123,7 +141,7 @@ const events = {
 					onDone: () => win.win.emit('novamoved')
 				})
 			} else {
-				win.win.setPosition(pos.x, pos.y)
+				win.win.setPosition(tx, ty)
 				win.win.emit('novamoved')
 			}
 		},
@@ -134,31 +152,44 @@ const events = {
 				return false
 			}
 
+			const fps = ilib.screen.requestMaxFPS()
+			const [cw, ch] = win.win.getSize()
+			const [cx, cy] = win.win.getPosition()
+			const tw = args?.relative ? cw + size.w : size.w
+			const th = args?.relative ? ch + size.h : size.h
+
+			let ox = 0, oy = 0
+			if (args?.origin) {
+				ox = args.origin.x == 'center' ? 0.5 : args.origin.x == 'right' ? 1 : 0
+				oy = args.origin.y == 'center' ? 0.5 : args.origin.y == 'bottom' ? 1 : 0
+			}
+
+			let px = cx, py = cy
+
 			if (args?.animate) {
-				const fps = ilib.screen.requestMaxFPS()
-				const [cw, ch] = win.win.getSize()
-				const tw = args?.relative ? cw + size.w : size.w
-				const th = args?.relative ? ch + size.h : size.h
+				let ew = cw, eh = ch
 
-				let ew = cw
-				let eh = ch
-
-				transition(cw, tw, args?.duration, fps, args?.ease, {
+				transition(cw, tw, args.duration, fps, args.ease, {
 					onTick: ({ c }) => {
 						ew = c
+						px = cx - (ew - cw) * ox
 						win.win.setSize(Math.round(ew), Math.round(eh))
+						win.win.setPosition(Math.round(px), Math.round(py))
 					}
 				})
 
-				transition(ch, th, args?.duration, fps, args?.ease, {
+				transition(ch, th, args.duration, fps, args.ease, {
 					onTick: ({ c }) => {
 						eh = c
+						py = cy - (eh - ch) * oy
 						win.win.setSize(Math.round(ew), Math.round(eh))
+						win.win.setPosition(Math.round(px), Math.round(py))
 					}
 				})
 
 			} else {
-				win.win.setSize(size.w, size.h)
+				win.win.setBounds(size.tw, size.th)
+				win.win.setPosition(Math.round(px), Math.round(py))
 			}
 		},
 		nullify: (wid) => {
@@ -223,6 +254,15 @@ const events = {
 				// You can**T** call me a freak for this one
 				console.log(`[NovaWM] ${wid} takes off their leash`)
 			}
+		},
+		modify: (wid, args) => {
+			const win = nefs.windows[wid]
+			if (!win) {
+				console.warn(`[NovaWM] No window with WID of ${wid} was found`)
+				return false
+			}
+
+
 		}
 	}
 }
@@ -245,6 +285,5 @@ app.whenReady().then(() => {
 	const mainwin = events.window.new(undefined, undefined, { href: '/'})
 	console.log('[Nova] Created main window')
 
-	events.window.resize(mainwin, { w: 600, h: 400 }, { animate: true, ease: 'smoothStep', duration: 500 })
-	events.window.move(mainwin, { x: -100, y: 0 }, { animate: true, ease: 'smoothStep', duration: 500, relative: true })
+	events.window.resize(mainwin, { w: 600, h: 400 }, { animate: true, ease: 'smoothStep', duration: 500, origin: { x: 'center', y: 'center' } })
 })

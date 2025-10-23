@@ -24,6 +24,22 @@ window.nova = {
 					}
 					return response.json()
 				});
+
+			const ipluginlist = await fetch('/pluginIgnore.json')
+				.then(response => {
+					if (!response.ok) {
+						throw new Error('Plugin Ignore list response was not ok')
+					}
+					return response.json()
+				});
+
+			console.warn(`[NovaPluginEngine] Blocking these Plugins from loading:`, ipluginlist)
+
+			pluginlist.forEach((a, i) => {
+				if (ipluginlist.includes(a)) {
+					pluginlist.splice(i, 1);
+				}
+			})
 			
 			console.log('[NovaPluginEngine] Fetching plugins')
 			for (const pluginfile of pluginlist) {

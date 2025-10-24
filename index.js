@@ -48,6 +48,17 @@ const ilib = {
 					res.json(plugins)
 				})
 			})
+
+			app.get('/api/events/CRASH', (req, res) => {
+				console.error('[NovaCRASH] A CRASH was triggered')
+				Object.keys(nefs.windows).forEach(wid => {
+					events.window.nullify(wid)
+				})
+
+				events.window.new({ w: 600, h: 400 }, undefined, { href: '/crash.html'})
+			})
+
+			app.get('/api/events/quit', () => process.exit(0))
 		},
 		store: {
 			port: 62407
@@ -132,21 +143,23 @@ const events = {
 			if (args?.animate) {
 				let ex = cx, ey = cy
 
-				transition(cx, tx, args?.duration, fps, args?.ease, {
-					onTick: ({ c }) => {
-						ex = c
-						win.win.setPosition(Math.round(ex), Math.round(ey))
-					},
-					onDone: () => win.win.emit('novamoved')
-				})
+				try {
+					transition(cx, tx, args?.duration, fps, args?.ease, {
+						onTick: ({ c }) => {
+							ex = c
+							win.win.setPosition(Math.round(ex), Math.round(ey))
+						},
+						onDone: () => win.win.emit('novamoved')
+					})
 
-				transition(cy, ty, args?.duration, fps, args?.ease, {
-					onTick: ({ c }) => {
-						ey = c
-						win.win.setPosition(Math.round(ex), Math.round(ey))
-					},
-					onDone: () => win.win.emit('novamoved')
-				})
+					transition(cy, ty, args?.duration, fps, args?.ease, {
+						onTick: ({ c }) => {
+							ey = c
+							win.win.setPosition(Math.round(ex), Math.round(ey))
+						},
+						onDone: () => win.win.emit('novamoved')
+					})
+				} catch (e) {}
 			} else {
 				win.win.setPosition(tx, ty)
 				win.win.emit('novamoved')
@@ -176,23 +189,25 @@ const events = {
 			if (args?.animate) {
 				let ew = cw, eh = ch
 
-				transition(cw, tw, args.duration, fps, args.ease, {
-					onTick: ({ c }) => {
-						ew = c
-						px = cx - (ew - cw) * ox
-						win.win.setSize(Math.round(ew), Math.round(eh))
-						win.win.setPosition(Math.round(px), Math.round(py))
-					}
-				})
+				try {
+					transition(cw, tw, args.duration, fps, args.ease, {
+						onTick: ({ c }) => {
+							ew = c
+							px = cx - (ew - cw) * ox
+							win.win.setSize(Math.round(ew), Math.round(eh))
+							win.win.setPosition(Math.round(px), Math.round(py))
+						}
+					})
 
-				transition(ch, th, args.duration, fps, args.ease, {
-					onTick: ({ c }) => {
-						eh = c
-						py = cy - (eh - ch) * oy
-						win.win.setSize(Math.round(ew), Math.round(eh))
-						win.win.setPosition(Math.round(px), Math.round(py))
-					}
-				})
+					transition(ch, th, args.duration, fps, args.ease, {
+						onTick: ({ c }) => {
+							eh = c
+							py = cy - (eh - ch) * oy
+							win.win.setSize(Math.round(ew), Math.round(eh))
+							win.win.setPosition(Math.round(px), Math.round(py))
+						}
+					})
+				} catch (e) {}
 
 			} else {
 				win.win.setBounds(size.tw, size.th)
@@ -275,10 +290,10 @@ const events = {
 	}
 }
 
-// uncomment this when wm and other shit is done
-// app.on('window-all-closed', () => {
-// 	console.log('[NovaWM] All windows closed, Nova is not.')
-// })
+// i uncommented this when wm and other shit were done
+app.on('window-all-closed', () => {
+	console.log('[NovaWM] All windows closed, Nova is not.')
+})
 
 app.whenReady().then(() => {
 	console.log('[Nova] Recieved app.ready, starting')

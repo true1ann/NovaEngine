@@ -97,5 +97,3 @@ window.nova = {
 		}
 	}
 }
-
-window.nova.pe.init()

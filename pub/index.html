@@ -13,8 +13,21 @@
 		<h1 style="padding: 0; margin: 0;">NovaEngine is loading...</h1>
 		<span>(This wont take a long time)</span>
 		<img src="/assets/loading.svg" style="margin: 30px; height: 64px; width: auto; color: white;">
-		<span style="color: red;">NovaEngine is in a raw state.<br>Currently the loading is infinite.</span>
+		<div><a href="#" id="skip">Skip checks</a> <a href="#" id="crash">Crash</a> <a href="#" id="quit">Early Quit</a></div>
 	</div>
 </body>
-
+<script>
+document.getElementById('skip').addEventListener('click', () => {
+	alert('TODO')
+})
+document.getElementById('crash').addEventListener('click', () => fetch('/api/events/CRASH'))
+document.getElementById('quit').addEventListener('click', () => fetch('/api/events/quit'))
+window.nova.pe.init(() => {
+	try {
+		document.getElementById('skip').click()
+	} catch {
+		fetch('/api/events/CRASH')
+	}
+})
+</script>
 </html>
